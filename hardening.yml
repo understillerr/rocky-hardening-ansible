@@ -1,0 +1,255 @@
+---
+- name: Rocky Linux Hardening
+  hosts: hardening_targets
+  become: true
+
+
+  tasks:
+
+    # Package & Updates
+    - name: Apply all available updates
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+
+
+    - name: Remove unsused packages (attack surface reduction)
+      ansible.builtin.dnf:
+        name:
+          - samba
+          - samba-common
+          - samba-client
+        state: absent
+
+
+    - name: Instal EPEL repository
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+
+
+    - name: Install security tooling
+      ansible.builtin.dnf:
+        name:
+          - fail2ban
+          - fail2ban-firewalld
+          - audit
+          - aide
+          - policycoreutils-python-utils
+        state: present
+
+
+    # SSH Hardening
+    - name: Deploy SSH hardening drop-in config
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/01-hardening.conf
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          Port 2222
+          PermitRootLogin no
+          PasswordAuthentication no
+          PubkeyAuthentication yes
+          AllowUsers LabAdmin
+          MaxAuthTries 3
+          X11Forwarding no
+      notify: Restart sshd
+
+
+    - name: Allow SSH port 2222 in SELinux
+      community.general.seport:
+        ports: 2222
+        proto: tcp
+        setype: ssh_port_t
+        state: present
+
+
+    # Firewall (firewalld)
+    - name: Ensure firwalld is installed and running
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+
+    - name: Open SSH port 2222
+      ansible.posix.firewalld:
+        port: 2222/tcp
+        permanent: true
+        immediate: true
+        state: enabled
+
+
+    - name: Remove unnecessary firewall services
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: disabled
+      loop:
+        - ssh
+        - cockpit
+        - dhcpv6-client
+
+
+    - name: Block ICMP timestamp requests
+      ansible.posix.firewalld:
+        icmp_block: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop:
+        - timestamp-request
+        - timestamp-reply
+
+
+    # Intrusion Prenvention (fail2ban)
+    - name: Deploy fail2ban jail configuration
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/jail.local
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [DEFAULT]
+          bantime  = 1h
+          findtime = 10m
+          maxretry = 4
+          banaction = firewalld-rich-rules
+          backend = systemd
+
+          [sshd]
+          enabled = true
+          port    = 2222
+      notify: Restart fail2ban
+
+
+    - name: Enable and start fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: true
+
+
+    # Audit (auditd)
+    - name: Enable and start auditd
+      ansible.builtin.service:
+        name: auditd
+        state: started
+        enabled: true
+
+
+    - name: Set audit log retention
+      ansible.builtin.lineinfile:
+        path: /etc/audit/auditd.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regexp: '^max_log_file_action', line: 'max_log_file_action = keep_logs' }
+        - { regexp: '^admin_space_left_action', line: 'admin_space_left_action = single' }
+
+
+    - name: Deploy CIS audit rules
+      ansible.builtin.copy:
+        dest: /etc/audit/rules.d/cis.rules
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          -w /etc/group -p wa -k identity
+          -w /etc/passwd -p wa -k identity
+          -w /etc/shadow -p wa -k identity
+          -w /etc/gshadow -p wa -k identity
+          -w /etc/sudoers -p wa -k scope
+          -w /etc/sudoers.d/ -p wa -k scope
+          -w /var/log/lastlog -p wa -k logins
+          -a always,exit -F arch=b64 -S adjtimex,settimeofday -k time-change
+          -w /etc/localtime -p wa -k time-change
+          -w /etc/hosts -p wa -k system-locale
+      notify: Reload audit rules
+
+
+    - name: Add audit boot parameters
+      ansible.builtin.command:
+        cmd: grubby --update-kernel ALL --args "audit=1 audit_backlog_limit=8192"
+      register: grubby_audit
+      changed_when: true
+
+
+    # Banners, cron permissions, module disable
+    - name: Deploy login warning banners
+      ansible.builtin.copy:
+        dest: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+        content: "Authorized access only. All activity may be monitored and reported.\n"
+      loop:
+        - /etc/issue
+        - /etc/issue.net
+
+
+    - name: Secure crontab file
+      ansible.builtin.file:
+        path: /etc/crontab
+        owner: root
+        group: root
+        mode: '0600'
+
+
+    - name: Secure cron directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0700'
+      loop:
+        - /etc/cron.hourly
+        - /etc/cron.daily
+        - /etc/cron.weekly
+        - /etc/cron.monthly
+        - /etc/cron.d
+
+
+    - name: Restrict cron/at to root only
+      ansible.builtin.copy:
+        dest: "{{ item }}"
+        owner: root
+        group: root
+        mode: '0600'
+        content: ""
+        force: false
+      loop:
+        - /etc/cron.allow
+        - /etc/at.allow
+
+
+    - name: Disbaled unused TIPC kernel module
+      ansible.builtin.copy:
+        dest: /ect/modprobe.d/cis-disable.conf
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          install tipc /bin/false
+          blacklist tipc
+
+
+  handlers:
+
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+
+
+    - name: Restart fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted
+
+
+    - name: Reload audit rules
+      ansible.builtin.command:
+        cmd: augenrules --load
