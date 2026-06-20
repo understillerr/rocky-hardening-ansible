@@ -113,6 +113,7 @@
         mode: '0644'
         content: |
           [DEFAULT]
+          ignoreip = 127.0.0.1/8 ::1 192.168.56.20
           bantime  = 1h
           findtime = 10m
           maxretry = 4
