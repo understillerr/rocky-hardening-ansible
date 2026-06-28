@@ -4,6 +4,10 @@ I'm a IT undergraduate learning cybersecurity, and I built this as part of a hom
 
 I first did all the hardening by hand. Then I turned those steps into this playbook so they can be repeated on any server without doing it manually each time. That's the main thing I wanted to learn: how to automate security setup instead of clicking through it every time.
 
+## Lab Setup
+
+![Network topology: three VMs on an isolated host-only network](topology.png)
+
 ## What it does
 
 | Area | What it does |
