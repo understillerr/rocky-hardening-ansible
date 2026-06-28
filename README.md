@@ -39,3 +39,28 @@ This playbook is one part of a bigger home lab I built. The full project also in
 ## Note
 
 I built this for an isolated lab. If you run it somewhere else, read through the tasks first. Some of them (like changing the SSH port) could lock you out if the settings don't match your setup.
+
+## Results
+
+Checked the work with before-and-after scans
+
+**Vulnerability scan (Nessus, credentialed)**
+
+| Severity      | Before | After |
+| ------------- | ------ | ----- |
+| Critical      | 2      | 0     |
+| High          | 5      | 0     |
+| Low           | 1      | 0     |
+| Actionable    | 8      | 0     |
+
+The baseline had 8 actionable findings (2 Critical, 5 High, 1 Low) plus 49 informational, 57 total. Every Critical and High was a missing OS security patch that only showed up once Nessus authenticated over SSH. After hardening, the same credentialed scan came back with 0 across every severity. The only results left are informational (system enumeration data), not vulnerabilities.
+
+**CIS Benchmark (Wazuh SCA, CIS Rocky Linux 10 v1.0.0)**
+
+Score went from 57% (91 controls passed) to 66% (105 passed). The remaining failures are partition-layout controls that need an install-time disk scheme, documented as a known, scoped gap.
+
+**Automation (Ansible dry run)**
+
+The `--check` run against the hardened host completed with 0 failures (ok=23, changed=7), confirming the playbook reproduces the full configuration and is idempotent.
+
+Full write-up with screenshots: https://easy-delphinium-785.notion.site/Linux-Hardening-Vulnerability-Assessment-Detection-Lab-3816f3a66a5381eeaf99e291eb62842d?pvs=73
