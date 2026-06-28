@@ -1,6 +1,6 @@
 # Rocky Linux Hardening Automation (Ansible)
 
-I'm a student learning cybersecurity, and I built this as part of a home lab project. It's an Ansible playbook that hardens a Rocky Linux 10 server automatically.
+I'm a IT undergraduate learning cybersecurity, and I built this as part of a home lab project. It's an Ansible playbook that hardens a Rocky Linux 10 server automatically.
 
 I first did all the hardening by hand. Then I turned those steps into this playbook so they can be repeated on any server without doing it manually each time. That's the main thing I wanted to learn: how to automate security setup instead of clicking through it every time.
 
@@ -34,7 +34,7 @@ It's safe to run this more than once. If the server is already set up, the playb
 
 ## About this project
 
-This playbook is one part of a bigger home lab I built. The full project also includes vulnerability scanning with Nessus, a Wazuh SIEM for detecting attacks, and CIS benchmark hardening. This piece shows how I took the manual hardening and automated it.
+This playbook is one part of a bigger home lab I built. The full project also includes vulnerability scanning with Nessus, a Wazuh SIEM for detection engineering and automated response, and CIS benchmark hardening. This piece shows how I took the manual hardening and automated it.
 
 ## Note
 
