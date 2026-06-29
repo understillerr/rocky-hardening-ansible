@@ -26,6 +26,7 @@ Ansible runs from one machine (my Kali box) and configures the other machine (Ro
 
 ## How to run it
 
+0. Install required collections: ansible-galaxy collection install -r requirements.yml
 1. Set the target server in inventory.ini.
 2. Do a test run first (shows what would change without changing anything): ansible-playbook hardening.yml --check -K
 3. Run it for real: ansible-playbook hardening.yml -K
