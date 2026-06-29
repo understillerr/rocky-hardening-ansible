@@ -67,4 +67,4 @@ Score went from 57% (91 controls passed) to 66% (105 passed). The remaining fail
 
 The `--check` run against the hardened host completed with 0 failures (ok=23, changed=7), confirming the playbook reproduces the full configuration and is idempotent.
 
-Full write-up with screenshots: https://easy-delphinium-785.notion.site/Linux-Hardening-Vulnerability-Assessment-Detection-Lab-3816f3a66a5381eeaf99e291eb62842d?pvs=73
+Full write-up with screenshots: [Project ePortfolio](https://easy-delphinium-785.notion.site/Linux-Hardening-Vulnerability-Assessment-Detection-Lab-3816f3a66a5381eeaf99e291eb62842d?pvs=73)
