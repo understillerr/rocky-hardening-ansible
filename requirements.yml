@@ -1,0 +1,7 @@
+---
+# Ansible collections required by hardening.yml
+# Install with: ansible-galaxy collection install -r requirements.yml
+
+collections:
+  - name: community.general   # provides community.general.seport (SELinux port labeling)
+  - name: ansible.posix       # provides ansible.posix.firewalld
