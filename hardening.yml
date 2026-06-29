@@ -281,6 +281,6 @@
 
 
     - name: Reload auditd config
-      ansible.builtin.service:
-        name: auditd
-        state: reloaded
+      ansible.builtin.command:
+        cmd: service auditd reload
+      changed_when: true
