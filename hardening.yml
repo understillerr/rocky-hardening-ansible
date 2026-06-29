@@ -51,6 +51,7 @@
         dest: /var/lib/aide/aide.db.gz
         remote_src: true
         force: false
+      when: not ansible_check_mode
 
 
     # SSH Hardening
