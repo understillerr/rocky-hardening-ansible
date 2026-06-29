@@ -13,7 +13,7 @@
         state: latest
 
 
-    - name: Remove unsused packages (attack surface reduction)
+    - name: Remove unused packages (attack surface reduction)
       ansible.builtin.dnf:
         name:
           - samba
@@ -22,7 +22,7 @@
         state: absent
 
 
-    - name: Instal EPEL repository
+    - name: Install EPEL repository
       ansible.builtin.dnf:
         name: epel-release
         state: present
@@ -66,7 +66,7 @@
 
 
     # Firewall (firewalld)
-    - name: Ensure firwalld is installed and running
+    - name: Ensure firewalld is installed and running
       ansible.builtin.service:
         name: firewalld
         state: started
@@ -104,7 +104,7 @@
         - timestamp-reply
 
 
-    # Intrusion Prenvention (fail2ban)
+    # Intrusion Prevention (fail2ban)
     - name: Deploy fail2ban jail configuration
       ansible.builtin.copy:
         dest: /etc/fail2ban/jail.local
@@ -226,9 +226,9 @@
         - /etc/at.allow
 
 
-    - name: Disbaled unused TIPC kernel module
+    - name: Disable unused TIPC kernel module
       ansible.builtin.copy:
-        dest: /ect/modprobe.d/cis-disable.conf
+        dest: /etc/modprobe.d/cis-disable.conf
         owner: root
         group: root
         mode: '0644'
@@ -254,3 +254,4 @@
     - name: Reload audit rules
       ansible.builtin.command:
         cmd: augenrules --load
+        changed_when: true
