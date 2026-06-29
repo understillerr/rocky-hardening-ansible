@@ -277,7 +277,7 @@
     - name: Reload audit rules
       ansible.builtin.command:
         cmd: augenrules --load
-        changed_when: true
+      changed_when: true
 
 
     - name: Reload auditd config
